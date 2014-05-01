@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html ng-app="ttl">
+
+	<head>
+
+		<title>Team Todo List</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta charset="utf-8">
+
+		<!-- JS and CSS from CDN -->
+		<link href="//cdn.jsdelivr.net/fontawesome/4.0.3/css/font-awesome.min.css" rel="stylesheet" />
+		<link href="//cdn.jsdelivr.net/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script>
+		
+		<!-- JS and CSS from Bower Components -->
+		<link href="dist/vendor.min.css" type="text/css" rel="stylesheet" />
+		<script src="dist/vendor.min.js"></script>
+
+		<!-- Main App JS -->
+		<script src="dist/app.js"></script>
+
+	</head>
+
+	<body ng-controller="MainController">
+
+		<br />
+		<br />
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-6 col-sm-offset-3">
+					<h3>Team todo list</h3>
+					<br />
+					<ul class="list-group">
+						<li class="list-group-item" ng-repeat="task in tasks">
+							<div class="row">
+								<div class="col-sm-4">
+									{{task.name}}
+								</div>
+								<div class="col-sm-4">
+									{{task.description}}
+								</div>
+								<div class="col-sm-2">
+									<i class="fa fa-check pull-right" ng-if="isDone(task.status)"></i>
+									<button type="button" id="done" class="btn btn-xs btn-default pull-right" ng-if="ownsTask(task.userId) && !isDone(task.status)" ng-click="done($index)">Done</button>
+								</div>
+								<div class="col-sm-2">
+									<button type="button" id="delete" ng-if="ownsTask(task.userId)" class="btn btn-xs btn-default pull-right" ng-click="delete($index)">Delete</button>
+								</div>
+							</div>
+						</li>
+					</ul>
+					<div ng-if="loggedIn">
+						<div class="input-group">
+							<input type="text" class="form-control" ng-model="input.description" />
+							<span class="input-group-btn">
+								<button class="btn btn-default" type="button" ng-click="add()">Add</button>
+							</span>
+						</div>
+					</div>
+					<div ng-if="!loggedIn">
+						<a class="btn btn-block btn-social btn-github" ng-click="login()">
+							<i class="fa fa-github"></i> Sign in with Github to add a task
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</body>
+
+</html>

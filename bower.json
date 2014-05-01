@@ -1,0 +1,23 @@
+{
+  "name": "asteroid-demo",
+  "version": "1.0.0",
+  "authors": [
+    "Paolo Scanferla <paolo.scanferla@mondora.com>"
+  ],
+  "description": "Demo of asteroid",
+  "main": "index.html",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "asteroid": "~0.1.14",
+    "angular": "~1.2.16",
+    "bootstrap": "~3.1.1",
+    "bootstrap-social": "~4.3.0"
+  }
+}
