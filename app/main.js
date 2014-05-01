@@ -16,13 +16,11 @@ angular.module("ttl", [])
 .run(function ($rootScope) {
 
 	var options = {
-		host: "http://localhost:3000",
-		//host: "http://pscanf.meteor.com",
+		host: "http://mondora.meteor.com",
 		do_not_autocreate_collections: true
 	};
 	options.ddpOptions = {
-		endpoint: "ws://localhost:3000/websocket",
-		//endpoint: "ws://pscanf.meteor.com/websocket",
+		endpoint: "ws://mondora.meteor.com/websocket",
 		SocketConstructor: WebSocket
 	};
 

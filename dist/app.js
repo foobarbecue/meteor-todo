@@ -16,11 +16,11 @@ angular.module('ttl', []).run([
   '$rootScope',
   function ($rootScope) {
     var options = {
-        host: 'http://localhost:3000',
+        host: 'http://mondora.meteor.com',
         do_not_autocreate_collections: true
       };
     options.ddpOptions = {
-      endpoint: 'ws://localhost:3000/websocket',
+      endpoint: 'ws://mondora.meteor.com/websocket',
       SocketConstructor: WebSocket
     };
     Ceres = new Asteroid(options);
