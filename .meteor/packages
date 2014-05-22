@@ -8,3 +8,5 @@ bootstrap-3
 font-awesome
 accounts-ui
 accounts-github
+accounts-twitter
+accounts-password
