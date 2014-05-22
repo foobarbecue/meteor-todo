@@ -1927,7 +1927,7 @@ return Q;
     var TIMER_INCREMENT = 500;
 	var DDP_SERVER_MESSAGES = [
 		"added", "changed", "connected", "error", "failed",
-		"nosub", "ready", "removed", "result", "updated"
+		"nosub", "ready", "removed", "result", "updated", "ping"
 	];
 
     var DDP = function (options) {
@@ -1935,7 +1935,11 @@ return Q;
         this._SocketConstructor = options.SocketConstructor;
         this._autoreconnect = !options.do_not_autoreconnect;
 		this._debug = options.debug;
+		// Subscriptions callbacks
         this._onReadyCallbacks   = {};
+        this._onStopCallbacks   = {};
+        this._onErrorCallbacks   = {};
+		// Methods callbacks
         this._onResultCallbacks  = {};
         this._onUpdatedCallbacks = {};
         this._events = {};
@@ -1948,8 +1952,8 @@ return Q;
     DDP.prototype.constructor = DDP;
 
     DDP.prototype.connect = function () {
-        this._socket = new this._SocketConstructor(this._endpoint);
 		this.readyState = 0;
+        this._socket = new this._SocketConstructor(this._endpoint);
         this._socket.onopen    = this._on_socket_open.bind(this);
         this._socket.onmessage = this._on_socket_message.bind(this);
         this._socket.onerror   = this._on_socket_error.bind(this);
@@ -1966,17 +1970,21 @@ return Q;
             method: name,
             params: params
         });
+		return id;
     };
 
-    DDP.prototype.sub = function (name, params, onReady) {
+    DDP.prototype.sub = function (name, params, onReady, onStop, onError) {
         var id = uniqueId();
         this._onReadyCallbacks[id] = onReady;
+        this._onStopCallbacks[id] = onStop;
+        this._onErrorCallbacks[id] = onError;
         this._send({
             msg: "sub",
             id: id,
             name: name,
             params: params
         });
+		return id;
     };
 
     DDP.prototype.unsub = function (id) {
@@ -2049,18 +2057,30 @@ return Q;
         });
     };
     DDP.prototype._on_nosub = function (data) {
-		if (this._onReadyCallbacks[data.id]) {
-			this._onReadyCallbacks[data.id](data.error, data.id);
+		if (data.error) {
+			if (!this._onErrorCallbacks[data.id]) {
+				delete this._onReadyCallbacks[data.id];
+				delete this._onStopCallbacks[data.id];
+				throw new Error(data.error);
+			}
+			this._onErrorCallbacks[data.id](data.error);
 			delete this._onReadyCallbacks[data.id];
-		} else {
-			throw data.error;
+			delete this._onStopCallbacks[data.id];
+			delete this._onErrorCallbacks[data.id];
+			return;
 		}
+		if (this._onStopCallbacks[data.id]) {
+			this._onStopCallbacks[data.id]();
+		}
+		delete this._onReadyCallbacks[data.id];
+		delete this._onStopCallbacks[data.id];
+		delete this._onErrorCallbacks[data.id];
     };
     DDP.prototype._on_ready = function (data) {
         var self = this;
         data.subs.forEach(function (id) {
 			if (self._onReadyCallbacks[id]) {
-				self._onReadyCallbacks[id](null, id);
+				self._onReadyCallbacks[id]();
 				delete self._onReadyCallbacks[id];
 			}
 		});
@@ -2070,14 +2090,16 @@ return Q;
         this._emit("error", data);
     };
     DDP.prototype._on_connected = function (data) {
+		var firstCon = this._reconnect_count === 0;
+		var eventName = firstCon ? "connected" : "reconnected";
 		this.readyState = 1;
         this._reconnect_count = 0;
         this._reconnect_incremental_timer = 0;
-        this._emit("connected", data);
 		var length = this._queue.length;
 		for (var i=0; i<length; i++) {
 			this._send(this._queue.shift());
 		}
+		this._emit(eventName, data);
     };
     DDP.prototype._on_failed = function (data) {
 		this.readyState = 4;
@@ -2092,6 +2114,12 @@ return Q;
     DDP.prototype._on_changed = function (data) {
         this._emit("changed", data);
     };
+    DDP.prototype._on_ping = function (data) {
+        this._send({
+            msg: "pong",
+            id: data.id
+        });
+    };
 
     DDP.prototype._on_socket_close = function () {
 		this.readyState = 4;
@@ -2101,7 +2129,6 @@ return Q;
     DDP.prototype._on_socket_error = function (e) {
 		this.readyState = 4;
         this._emit("socket_error", e);
-        if (this._autoreconnect) this._try_reconnect();
     };
     DDP.prototype._on_socket_open = function () {
         this._send({

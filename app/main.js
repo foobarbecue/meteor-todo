@@ -15,16 +15,7 @@ angular.module("ttl", [])
 
 .run(function ($rootScope) {
 
-	var options = {
-		host: "http://mondora.meteor.com",
-		do_not_autocreate_collections: true
-	};
-	options.ddpOptions = {
-		endpoint: "ws://mondora.meteor.com/websocket",
-		SocketConstructor: WebSocket
-	};
-
-	Ceres = new Asteroid(options);
+	Ceres = new Asteroid("mondora.meteor.com");
 	Tasks = Ceres.createCollection("tasks");
 	Users = Ceres.createCollection("users");
 	Ceres.subscribe("tasks");
@@ -47,15 +38,13 @@ angular.module("ttl", [])
 
 .controller("MainController", function ($scope) {
 
-	$scope.tasks = Tasks.find({});
-	var updateTasks = function () {
+	var tasksReactiveQuery = Tasks.reactiveQuery({});
+	tasksReactiveQuery.on("change", function () {
 		$scope.safeApply(function () {
-			$scope.tasks = Tasks.find({});
+			$scope.tasks = tasksReactiveQuery.result;
 		});
-	};
-	Tasks.on("insert", updateTasks);
-	Tasks.on("update", updateTasks);
-	Tasks.on("remove", updateTasks);
+	});
+	$scope.tasks = tasksReactiveQuery.result;
 
 	$scope.login = function () {
 		Ceres.loginWithGithub();
