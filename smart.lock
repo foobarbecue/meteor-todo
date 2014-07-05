@@ -4,9 +4,7 @@
     "basePackages": {
       "bootstrap-3": {},
       "font-awesome": {},
-      "mondora-asteroid": {
-        "path": "../meteor-asteroid"
-      }
+      "mondora-asteroid": {}
     },
     "packages": {
       "bootstrap-3": {
@@ -20,7 +18,9 @@
         "commit": "ce6b1e92715d1938babc5d69c655c17e387f5926"
       },
       "mondora-asteroid": {
-        "path": "../meteor-asteroid"
+        "git": "https://github.com/mondora/meteor-asteroid.git",
+        "tag": "v0.1.0",
+        "commit": "a0773afc4853030bce937c16ab089981871d4c0e"
       }
     }
   }

@@ -2,8 +2,6 @@
   "packages": {
     "bootstrap-3": {},
     "font-awesome": {},
-    "mondora-asteroid": {
-      "path": "/Users/pscanf/mondora/meteor-asteroid"
-    }
+    "mondora-asteroid": {}
   }
 }
