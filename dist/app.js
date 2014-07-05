@@ -15,21 +15,13 @@ angular.module('ttl', []).run([
 ]).run([
   '$rootScope',
   function ($rootScope) {
-    var options = {
-        host: 'http://mondora.meteor.com',
-        do_not_autocreate_collections: true
-      };
-    options.ddpOptions = {
-      endpoint: 'ws://mondora.meteor.com/websocket',
-      SocketConstructor: WebSocket
-    };
-    Ceres = new Asteroid(options);
-    Tasks = Ceres.createCollection('tasks');
-    Users = Ceres.createCollection('users');
+    Ceres = new Asteroid('meteor.mondora.com', true);
+    Tasks = Ceres.getCollection('tasks');
+    Users = Ceres.getCollection('users');
     Ceres.subscribe('tasks');
     Ceres.on('login', function () {
       $rootScope.safeApply(function () {
-        $rootScope.user = Users.findOne({});
+        $rootScope.user = Users.reactiveQuery({}).result[0];
         $rootScope.loggedIn = true;
       });
     });
@@ -43,15 +35,13 @@ angular.module('ttl', []).run([
 ]).controller('MainController', [
   '$scope',
   function ($scope) {
-    $scope.tasks = Tasks.find({});
-    var updateTasks = function () {
+    var tasksRQ = Tasks.reactiveQuery({});
+    tasksRQ.on('change', function () {
       $scope.safeApply(function () {
-        $scope.tasks = Tasks.find({});
+        $scope.tasks = tasksRQ.result;
       });
-    };
-    Tasks.on('insert', updateTasks);
-    Tasks.on('update', updateTasks);
-    Tasks.on('remove', updateTasks);
+    });
+    $scope.tasks = tasksRQ.result;
     $scope.login = function () {
       Ceres.loginWithGithub();
     };

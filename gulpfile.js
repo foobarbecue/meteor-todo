@@ -32,7 +32,7 @@ gulp.task("vendorStyles", function () {
 gulp.task("vendorScripts", function () {
 	var sources = [
 		"bower_components/q/q.js",
-		"bower_components/ddp.js/ddp.js",
+		"bower_components/ddp.js/src/ddp.js",
 		"bower_components/asteroid/dist/asteroid.js"
 	];
 	gulp.src(sources)
@@ -47,7 +47,7 @@ gulp.task("buildVendor", ["vendorStyles", "vendorScripts"]);
 
 gulp.task("default", function () {
 	lrServer.listen(35729);
-	var dvServer =http.createServer(function (req, res) {
+	var dvServer = http.createServer(function (req, res) {
 		var stServer = new static.Server("./", {cache: false});
 		req.on("end", function () {
 			stServer.serve(req, res);

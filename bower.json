@@ -15,9 +15,9 @@
     "tests"
   ],
   "dependencies": {
-    "asteroid": "~0.1.14",
     "angular": "~1.2.16",
     "bootstrap": "~3.1.1",
-    "bootstrap-social": "~4.3.0"
+    "bootstrap-social": "~4.3.0",
+    "asteroid": "master"
   }
 }
