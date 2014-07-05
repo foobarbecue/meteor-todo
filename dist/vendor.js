@@ -1930,25 +1930,22 @@ return Q;
 	var DEFAULT_PING_INTERVAL = 10000;
 	var DDP_SERVER_MESSAGES = [
 		"added", "changed", "connected", "error", "failed",
-		"nosub", "ready", "removed", "result", "updated",
-		"ping", "pong"
+		"nosub", "ready", "removed", "result", "updated", "ping"
 	];
 
-	var DDP = function (options) {
-		// Configuration
-		this._endpoint = options.endpoint;
-		this._SocketConstructor = options.SocketConstructor;
-		this._autoreconnect = !options.do_not_autoreconnect;
-		this._ping_interval = options._ping_interval || DEFAULT_PING_INTERVAL;
-		this._socketInterceptFunction = options.socketInterceptFunction;
+    var DDP = function (options) {
+        this._endpoint = options.endpoint;
+        this._SocketConstructor = options.SocketConstructor;
+        this._autoreconnect = !options.do_not_autoreconnect;
+		this._debug = options.debug;
 		// Subscriptions callbacks
-		this._onReadyCallbacks   = {};
-		this._onStopCallbacks   = {};
-		this._onErrorCallbacks   = {};
+        this._onReadyCallbacks   = {};
+        this._onStopCallbacks   = {};
+        this._onErrorCallbacks   = {};
 		// Methods callbacks
-		this._onResultCallbacks  = {};
-		this._onUpdatedCallbacks = {};
-		this._events = {};
+        this._onResultCallbacks  = {};
+        this._onUpdatedCallbacks = {};
+        this._events = {};
 		this._queue = [];
 		// Setup
 		this.readyState = -1;
@@ -1961,41 +1958,41 @@ return Q;
 	};
 	DDP.prototype.constructor = DDP;
 
-	DDP.prototype.connect = function () {
+    DDP.prototype.connect = function () {
 		this.readyState = 0;
-		this._socket = new this._SocketConstructor(this._endpoint);
-		this._socket.onopen	= this._on_socket_open.bind(this);
-		this._socket.onmessage = this._on_socket_message.bind(this);
-		this._socket.onerror   = this._on_socket_error.bind(this);
-		this._socket.onclose   = this._on_socket_close.bind(this);
-	};
+        this._socket = new this._SocketConstructor(this._endpoint);
+        this._socket.onopen    = this._on_socket_open.bind(this);
+        this._socket.onmessage = this._on_socket_message.bind(this);
+        this._socket.onerror   = this._on_socket_error.bind(this);
+        this._socket.onclose   = this._on_socket_close.bind(this);
+    };
 
-	DDP.prototype.method = function (name, params, onResult, onUpdated) {
-		var id = uniqueId();
-		this._onResultCallbacks[id] = onResult;
-		this._onUpdatedCallbacks[id] = onUpdated;
-		this._send({
-			msg: "method",
-			id: id,
-			method: name,
-			params: params
-		});
+    DDP.prototype.method = function (name, params, onResult, onUpdated) {
+        var id = uniqueId();
+        this._onResultCallbacks[id] = onResult;
+        this._onUpdatedCallbacks[id] = onUpdated;
+        this._send({
+            msg: "method",
+            id: id,
+            method: name,
+            params: params
+        });
 		return id;
-	};
+    };
 
-	DDP.prototype.sub = function (name, params, onReady, onStop, onError) {
-		var id = uniqueId();
-		this._onReadyCallbacks[id] = onReady;
-		this._onStopCallbacks[id] = onStop;
-		this._onErrorCallbacks[id] = onError;
-		this._send({
-			msg: "sub",
-			id: id,
-			name: name,
-			params: params
-		});
+    DDP.prototype.sub = function (name, params, onReady, onStop, onError) {
+        var id = uniqueId();
+        this._onReadyCallbacks[id] = onReady;
+        this._onStopCallbacks[id] = onStop;
+        this._onErrorCallbacks[id] = onError;
+        this._send({
+            msg: "sub",
+            id: id,
+            name: name,
+            params: params
+        });
 		return id;
-	};
+    };
 
 	DDP.prototype.unsub = function (id) {
 		this._send({
@@ -2083,9 +2080,9 @@ return Q;
 				self._onUpdatedCallbacks[id]();
 				delete self._onUpdatedCallbacks[id];
 			}
-		});
-	};
-	DDP.prototype._on_nosub = function (data) {
+        });
+    };
+    DDP.prototype._on_nosub = function (data) {
 		if (data.error) {
 			if (!this._onErrorCallbacks[data.id]) {
 				delete this._onReadyCallbacks[data.id];
@@ -2104,10 +2101,10 @@ return Q;
 		delete this._onReadyCallbacks[data.id];
 		delete this._onStopCallbacks[data.id];
 		delete this._onErrorCallbacks[data.id];
-	};
-	DDP.prototype._on_ready = function (data) {
-		var self = this;
-		data.subs.forEach(function (id) {
+    };
+    DDP.prototype._on_ready = function (data) {
+        var self = this;
+        data.subs.forEach(function (id) {
 			if (self._onReadyCallbacks[id]) {
 				self._onReadyCallbacks[id]();
 				delete self._onReadyCallbacks[id];
@@ -2115,53 +2112,40 @@ return Q;
 		});
 	};
 
-	DDP.prototype._on_error = function (data) {
-		this._emit("error", data);
-	};
-	DDP.prototype._on_connected = function (data) {
-		var self = this;
-		var firstCon = self._reconnect_count === 0;
+    DDP.prototype._on_error = function (data) {
+        this._emit("error", data);
+    };
+    DDP.prototype._on_connected = function (data) {
+		var firstCon = this._reconnect_count === 0;
 		var eventName = firstCon ? "connected" : "reconnected";
-		self.readyState = 1;
-		self._reconnect_count = 0;
-		self._reconnect_incremental_timer = 0;
-		var length = self._queue.length;
+		this.readyState = 1;
+        this._reconnect_count = 0;
+        this._reconnect_incremental_timer = 0;
+		var length = this._queue.length;
 		for (var i=0; i<length; i++) {
 			self._send(self._queue.shift());
 		}
-		self._emit(eventName, data);
-		// Set up keepalive ping-s
-		self._ping_interval_handle = setInterval(function () {
-			var id = uniqueId();
-			self._send({
-				msg: "ping",
-				id: id
-			});
-		}, self._ping_interval);
-	};
-	DDP.prototype._on_failed = function (data) {
+		this._emit(eventName, data);
+    };
+    DDP.prototype._on_failed = function (data) {
 		this.readyState = 4;
-		this._emit("failed", data);
-	};
-	DDP.prototype._on_added = function (data) {
-		this._emit("added", data);
-	};
-	DDP.prototype._on_removed = function (data) {
-		this._emit("removed", data);
-	};
-	DDP.prototype._on_changed = function (data) {
-		this._emit("changed", data);
-	};
-	DDP.prototype._on_ping = function (data) {
-		this._send({
-			msg: "pong",
-			id: data.id
-		});
-	};
-	DDP.prototype._on_pong = function (data) {
-		// For now, do nothing.
-		// In the future we might want to log latency or so.
-	};
+        this._emit("failed", data);
+    };
+    DDP.prototype._on_added = function (data) {
+        this._emit("added", data);
+    };
+    DDP.prototype._on_removed = function (data) {
+        this._emit("removed", data);
+    };
+    DDP.prototype._on_changed = function (data) {
+        this._emit("changed", data);
+    };
+    DDP.prototype._on_ping = function (data) {
+        this._send({
+            msg: "pong",
+            id: data.id
+        });
+    };
 
 	DDP.prototype._on_socket_close = function () {
 		if (this._socketInterceptFunction) {
@@ -2187,31 +2171,29 @@ return Q;
 		}
 		clearInterval(this._ping_interval_handle);
 		this.readyState = 4;
-		this._emit("socket_error", e);
-	};
-	DDP.prototype._on_socket_open = function () {
-		if (this._socketInterceptFunction) {
-			this._socketInterceptFunction({
-				type: "socket_open",
-				timestamp: Date.now()
-			});
-		}
-		this._send({
-			msg: "connect",
-			version: "pre2",
-			support: ["pre2"]
-		});
-	};
-	DDP.prototype._on_socket_message = function (message) {
-		if (this._socketInterceptFunction) {
-			this._socketInterceptFunction({
-				type: "socket_message_received",
-				message: message.data,
-				timestamp: Date.now()
-			});
-		}
-		var data;
-		if (message.data === INIT_DDP_MESSAGE) {
+        this._emit("socket_error", e);
+    };
+    DDP.prototype._on_socket_open = function () {
+        this._send({
+            msg: "connect",
+            version: "pre1",
+            support: ["pre1"]
+        });
+    };
+    DDP.prototype._on_socket_message = function (message) {
+        var data;
+		if (this._debug) console.log(message);
+        if (message.data === INIT_DDP_MESSAGE) return;
+        try {
+            if (typeof EJSON === "undefined") {
+                data = JSON.parse(message.data);
+            } else {
+                data = EJSON.parse(message.data);
+            }
+			if (DDP_SERVER_MESSAGES.indexOf(data.msg) === -1) throw new Error();
+        } catch (e) {
+            console.warn("Non DDP message received:");
+            console.warn(message.data);
 			return;
 		}
 		try {
