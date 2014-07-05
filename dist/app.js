@@ -15,7 +15,7 @@ angular.module('ttl', []).run([
 ]).run([
   '$rootScope',
   function ($rootScope) {
-    Ceres = new Asteroid('meteor.mondora.com');
+    Ceres = new Asteroid('meteor.todo.pscanf.com');
     Tasks = Ceres.getCollection('tasks');
     Users = Ceres.getCollection('users');
     Ceres.subscribe('tasks');
