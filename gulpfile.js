@@ -31,6 +31,7 @@ gulp.task("vendorStyles", function () {
 
 gulp.task("vendorScripts", function () {
 	var sources = [
+		"bower_components/bower-sockjs-client/sockjs.js",
 		"bower_components/q/q.js",
 		"bower_components/ddp.js/src/ddp.js",
 		"bower_components/asteroid/dist/asteroid.js"
