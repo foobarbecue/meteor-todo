@@ -4,11 +4,11 @@
 # but you can also edit it by hand.
 
 standard-app-packages
-bootstrap-3
-font-awesome
 accounts-ui
 accounts-github
 accounts-twitter
 accounts-password
 accounts-facebook
-mondora-asteroid
+mondora:asteroid
+bootstrap
+natestrauser:font-awesome
